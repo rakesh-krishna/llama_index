@@ -89,8 +89,13 @@ def get_default_tokenizer() -> Callable:
     NOTE: taken from https://www.pinecone.io/learn/hybrid-search-intro/.
 
     """
-    from transformers import BertTokenizerFast
-
+    import_err_msg = (
+        "`transformers` package not found, please run `pip install transformers`"
+    )
+    try:
+        from transformers import BertTokenizerFast
+    except ImportError:
+        raise ImportError(import_err_msg)
     orig_tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
     # set some default arguments, so input is just a list of strings
     tokenizer = partial(
@@ -182,7 +187,7 @@ class PineconeVectorStore(VectorStore):
         self._insert_kwargs = insert_kwargs or {}
 
         self._add_sparse_vector = add_sparse_vector
-        if tokenizer is None:
+        if tokenizer is None and add_sparse_vector:
             tokenizer = get_default_tokenizer()
         self._tokenizer = tokenizer
         self._text_key = text_key
